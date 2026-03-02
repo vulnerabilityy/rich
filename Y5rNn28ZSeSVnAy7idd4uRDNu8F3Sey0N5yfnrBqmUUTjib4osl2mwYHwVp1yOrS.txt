@@ -780,8 +780,8 @@
         end
 
         Library.NextFlag = function(self)
-            local FlagNumber = self.UnnamedFlags + 1
-            return StringFormat("Flag Number %s %s", FlagNumber, HttpService:GenerateGUID(false))
+            self.UnnamedFlags = self.UnnamedFlags + 1
+            return StringFormat("Flag Number %s %s", self.UnnamedFlags, HttpService:GenerateGUID(false))
         end
 
         Library.AddToTheme = function(self, Item, Properties)
@@ -854,10 +854,8 @@
         end
 
         Library.SaveConfig = function(self, Config)
-            if isfile(Library.Folders.Configs .. "/" .. Config .. ".json") then
-                writefile(Library.Folders.Configs .. "/" .. Config .. ".json", Library:GetConfig())
-                Library:Notification("Saved config " .. Config .. ".json", 5, Color3.fromRGB(0, 255, 0))
-            end
+            writefile(Library.Folders.Configs .. "/" .. Config .. ".json", Library:GetConfig())
+            Library:Notification("Saved config " .. Config .. ".json", 5, Color3.fromRGB(0, 255, 0))
         end
 
         Library.RefreshConfigsList = function(self, Element)
@@ -2005,10 +2003,10 @@
             end
 
             function Keybind:Set(Key)
-                if StringFind(tostring(Key), "Enum") then 
+                if typeof(Key) == "EnumItem" or (type(Key) == "string" and StringFind(Key, "Enum")) then 
                     Keybind.Key = tostring(Key)
 
-                    local KeyName = Key.Name
+                    local KeyName = typeof(Key) == "EnumItem" and Key.Name or StringGSub(Key, ".*%.", "")
                     local KeyString = (KeyName == "Backspace" or KeyName == "Escape") and "Empty" or (Keys[KeyName] or KeyName or "Empty")
                     local TextToDisplay = StringGSub(StringGSub(KeyString, "KeyCode.", ""), "UserInputType.", "") or "Empty"
 
@@ -2028,7 +2026,7 @@
                     end
                 elseif type(Key) == "table" then 
                     local RealKeyEnum = Key.Key
-                    local KeyName = RealKeyEnum.Name
+                    local KeyName = typeof(RealKeyEnum) == "EnumItem" and RealKeyEnum.Name or StringGSub(tostring(RealKeyEnum), ".*%.", "")
                     Keybind.Key = tostring(RealKeyEnum)
 
                     if Key.Mode then
@@ -3418,7 +3416,7 @@
             end
 
             function Toggle:Set(Bool)
-                Toggle.Value = Bool or not Toggle.Value
+                Toggle.Value = (Bool == nil and not Toggle.Value or Bool)
 
                 Library.Flags[Toggle.Flag] = Toggle.Value
 
